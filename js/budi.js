@@ -6,7 +6,10 @@ window.PO = window.PO || {};
 PO.budi = (function () {
   var U = PO.util, S = PO.store, I = PO.icons, UI = PO.ui, h = U.h;
   var KEY = 'batchin.budi.v1';
-  var DEFAULT_URL = 'http://localhost:7860/api/v1/run/113cf4a6-f575-4e13-b643-2471c7160097';
+
+  /* ---------- koneksi Langflow (di belakang layar, tidak tampil di antarmuka) ---------- */
+  var FLOW_URL = 'http://localhost:7860/api/v1/run/113cf4a6-f575-4e13-b643-2471c7160097';
+  var FLOW_KEY = 'sk-Dmsn5Ku82BtgwG4wiuZMqwSpd8k_V42_4v3jl028EyY';
 
   var STYLES = {
     santai: { label: 'Santai', text: 'Gaya santai dan hangat seperti teman yang jago bisnis. Bahasa Indonesia sehari-hari (aku/kamu), boleh sesekali emoji secukupnya.' },
@@ -30,8 +33,7 @@ PO.budi = (function () {
   var db = null, mem = false;
   function fresh() {
     return { chats: [], activeId: null, memory: [], introSeen: false,
-      persona: { style: 'santai', length: 'sedang', callName: '', extra: '' },
-      config: { url: DEFAULT_URL, key: '' } };
+      persona: { style: 'santai', length: 'sedang', callName: '', extra: '' } };
   }
   function load() {
     var d = fresh();
@@ -43,7 +45,6 @@ PO.budi = (function () {
         d.memory = Array.isArray(raw.memory) ? raw.memory : [];
         d.introSeen = !!raw.introSeen;
         d.persona = Object.assign(d.persona, raw.persona || {});
-        d.config = Object.assign(d.config, raw.config || {});
       }
     } catch (e) { mem = true; }
     db = d;
@@ -290,17 +291,14 @@ PO.budi = (function () {
   }
 
   function callFlow(input) {
-    var url = (db.config.url || '').trim();
-    if (!url) return Promise.reject({ kind: 'config', message: 'Alamat endpoint belum diisi.' });
-    var headers = { 'Content-Type': 'application/json' };
-    if (db.config.key) headers['x-api-key'] = db.config.key.trim();
+    var headers = { 'Content-Type': 'application/json', 'x-api-key': FLOW_KEY };
     var ctl = window.AbortController ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 120000);
-    return fetch(url, { method: 'POST', headers: headers, signal: ctl ? ctl.signal : undefined,
+    return fetch(FLOW_URL, { method: 'POST', headers: headers, signal: ctl ? ctl.signal : undefined,
       body: JSON.stringify({ output_type: 'chat', input_type: 'chat', input_value: input, session_id: U.uid('budi') }) })
       .then(function (res) {
         clearTimeout(timer);
-        if (res.status === 401 || res.status === 403) throw { kind: 'auth', message: 'API key ditolak server (' + res.status + ').' };
+        if (res.status === 401 || res.status === 403) throw { kind: 'auth', message: 'Akses ke asisten Budi ditolak. Hubungi admin sistem.' };
         if (!res.ok) throw { kind: 'http', message: 'Server membalas dengan error ' + res.status + '.' };
         return res.json();
       })
@@ -311,9 +309,10 @@ PO.budi = (function () {
       })
       .catch(function (e) {
         clearTimeout(timer);
+        console.error('Budi (Langflow):', e);
         if (e && e.kind) throw e;
         if (e && e.name === 'AbortError') throw { kind: 'timeout', message: 'Budi terlalu lama menjawab (lebih dari 2 menit).' };
-        throw { kind: 'network', message: 'Tidak bisa terhubung ke server Langflow. Pastikan server menyala, alamat endpoint benar, dan CORS mengizinkan halaman ini.' };
+        throw { kind: 'network', message: 'Budi sedang tidak bisa dihubungi. Coba lagi sebentar lagi, atau hubungi admin sistem jika terus berulang.' };
       });
   }
 
@@ -345,7 +344,7 @@ PO.budi = (function () {
   }
 
   function extractMemory(userText) {
-    if (userText.length < 15 || !db.config.url) return;
+    if (userText.length < 15) return;
     var prompt = 'Tugas: ekstrak preferensi atau fakta TETAP tentang pengguna/usahanya dari pesan di bawah (gaya komunikasi, panggilan, target, batasan, kebiasaan, produk andalan, tujuan bisnis, hal yang tidak disukai). ' +
       'Abaikan pertanyaan biasa dan hal sementara. Jawab HANYA dengan JSON array berisi kalimat pendek bahasa Indonesia, contoh ["Lebih suka jawaban singkat","Target omzet Rp10 juta per bulan"]. Jika tidak ada, jawab [].\n' +
       'Yang sudah diingat: ' + (db.memory.map(function (m) { return m.text; }).join(' | ') || '(kosong)') + '\nPesan pengguna: """' + userText + '"""';
@@ -405,7 +404,6 @@ PO.budi = (function () {
       } }, ic('copy', 13)));
     }
     if (m.error && m.retry) meta.appendChild(h('button', { class: 'budi-mini txt', type: 'button', onClick: retry }, ic('refresh', 13), 'Coba lagi'));
-    if (m.error && m.kind === 'auth' || m.error && m.kind === 'config') meta.appendChild(h('a', { class: 'budi-mini txt', href: '#settings', onClick: function () { setOpen(false); } }, 'Buka Pengaturan'));
     return h('div', { class: 'budi-row ' + (isUser ? 'me' : 'bot') },
       !isUser ? h('div', { class: 'budi-ava' }, ic('bot', 16)) : null,
       h('div', { class: 'budi-bub' + (m.error ? ' err' : '') }, body, meta));
@@ -512,7 +510,7 @@ PO.budi = (function () {
       chat.messages.push({ role: 'bot', md: reply.trim(), at: new Date().toISOString() });
       if (userText) extractMemory(userText);
     }).catch(function (err) {
-      chat.messages.push({ role: 'bot', md: '**Maaf, Budi belum bisa menjawab.**\n' + (err.message || 'Terjadi kesalahan.') + (err.kind === 'auth' || err.kind === 'config' ? '\n\nPeriksa *Pengaturan → Asisten Budi*.' : ''), at: new Date().toISOString(), error: true, retry: true, kind: err.kind });
+      chat.messages.push({ role: 'bot', md: '**Maaf, Budi belum bisa menjawab.**\n' + (err.message || 'Terjadi kesalahan.'), at: new Date().toISOString(), error: true, retry: true, kind: err.kind });
     }).then(function () {
       delete pending[chat.id]; chat.updatedAt = new Date().toISOString(); save();
       if (db.activeId === chat.id && view === 'chat') draw(); else if (view === 'history') draw();
@@ -638,10 +636,10 @@ PO.budi = (function () {
     buildPanel();
   }
 
-  /* ---------- kartu Pengaturan: gaya bicara & koneksi ---------- */
+  /* ---------- kartu Pengaturan: gaya bicara ---------- */
   function settingsCard() {
     if (!db) load();
-    var p = db.persona, c = db.config;
+    var p = db.persona;
     var st = { style: p.style, length: p.length };
     var styleBox = h('div'), lenBox = h('div');
     function paint() {
@@ -652,12 +650,8 @@ PO.budi = (function () {
     paint();
     var call = h('input', { class: 'input', value: p.callName, placeholder: 'Contoh: Kak Licia', maxLength: 30 });
     var extra = h('textarea', { class: 'textarea', placeholder: 'Contoh: Sering kasih analogi dapur, selalu akhiri dengan satu langkah yang bisa langsung kulakukan.', value: p.extra, maxLength: 500 });
-    var url = h('input', { class: 'input mono', value: c.url, placeholder: DEFAULT_URL });
-    var key = h('input', { class: 'input mono', type: 'password', value: c.key, placeholder: 'Tempel API key Langflow', autocomplete: 'off' });
-    var status = h('span', { class: 'small mute' });
     function persist() {
       db.persona = { style: st.style, length: st.length, callName: call.value.trim(), extra: extra.value.trim() };
-      db.config = { url: url.value.trim(), key: key.value.trim() };
       save();
     }
     var sample = h('div', { class: 'font-sample' });
@@ -673,22 +667,15 @@ PO.budi = (function () {
     var obs = new MutationObserver(showSample); obs.observe(styleBox, { childList: true, subtree: true, attributes: true });
     showSample();
     var body = h('div', { class: 'col', style: 'gap:16px' },
-      h('p', { class: 'small mute' }, 'Atur cara Budi berbicara dan koneksi ke server AI. Berlaku untuk semua chat.'),
+      h('p', { class: 'small mute' }, 'Atur cara Budi berbicara. Berlaku untuk semua chat.'),
       h('div', null, h('div', { class: 'field-label' }, 'Gaya bicara'), h('div', { class: 'field-hint' }, 'Pilih karakter utama Budi.'), styleBox),
       sample,
       h('div', null, h('div', { class: 'field-label' }, 'Panjang jawaban'), lenBox),
       UI.field('Budi memanggil kamu', call, { hint: 'Kosongkan untuk “kamu”.' }),
       UI.field('Instruksi gaya tambahan', extra, { hint: 'Gaya khusus apa pun, ditulis bebas.' }),
-      UI.field('Alamat endpoint Langflow', url, { hint: 'URL lengkap alur /api/v1/run/…' }),
-      UI.field('API key', key, { hint: 'Disimpan hanya di peramban ini, tidak ditulis di kode.' }),
       h('div', { class: 'row wrap', style: 'gap:8px;align-items:center' },
         UI.btn('Simpan', 'check', 'btn-sm', function () { persist(); UI.toast('Pengaturan Budi disimpan'); }),
-        UI.btn('Uji koneksi', 'refresh', 'btn-ghost btn-sm', function () {
-          persist(); status.textContent = 'Menguji…';
-          callFlow('Balas dengan satu kata: siap').then(function () { status.textContent = 'Terhubung ✓'; }, function (e) { status.textContent = e.message; });
-        }),
-        UI.btn('Kembalikan gaya bawaan', null, 'btn-quiet btn-sm', function () { st.style = 'santai'; st.length = 'sedang'; call.value = ''; extra.value = ''; paint(); showSample(); }),
-        status));
+        UI.btn('Kembalikan gaya bawaan', null, 'btn-quiet btn-sm', function () { st.style = 'santai'; st.length = 'sedang'; call.value = ''; extra.value = ''; paint(); showSample(); })));
     return UI.card('Asisten Budi', body);
   }
 

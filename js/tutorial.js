@@ -94,7 +94,7 @@ PO.tour = (function () {
       { target: function () { return card('Profil usaha'); }, title: 'Profil usaha', text: 'Isi nama, foto, dan tanggal mulai usaha.' },
       { target: function () { return card('Aturan pre-order'); }, title: 'Aturan pre-order', text: 'Atur satuan, kuota, DP, dan target bulanan.' },
       { target: function () { return card('Tampilan'); }, title: 'Tampilan', text: 'Ganti ukuran tulisan dan warna aplikasi di sini.' },
-      { target: function () { return card('Asisten Budi'); }, title: 'Gaya bicara Budi', text: 'Atur gaya bicara asisten Budi dan koneksi AI-nya di sini.' },
+      { target: function () { return card('Asisten Budi'); }, title: 'Gaya bicara Budi', text: 'Atur gaya bicara asisten Budi di sini.' },
       { target: function () { return byText('.page-actions .btn', 'Simpan'); }, title: 'Simpan', text: 'Klik Simpan setelah mengubah pengaturan.' }
     ] },
     { id: 'budi', title: 'Ngobrol dengan Budi', desc: 'Asisten AI untuk saran & keputusan bisnis', icon: 'message', route: 'dashboard', steps: [
@@ -107,8 +107,7 @@ PO.tour = (function () {
     ] },
     { id: 'budistyle', title: 'Atur gaya bicara Budi', desc: 'Santai, formal, atau gayamu sendiri', icon: 'settings', route: 'settings', steps: [
       { target: function () { return card('Asisten Budi'); }, title: 'Asisten Budi', text: 'Semua pengaturan Budi ada di kartu ini.' },
-      { target: function () { return byText('.card .field', 'Instruksi gaya tambahan'); }, title: 'Gaya sendiri', text: 'Pilih gaya bawaan, atau tulis bebas gaya bicara yang kamu mau.' },
-      { target: function () { return byText('.card .field', 'API key'); }, title: 'Koneksi AI', text: 'Isi alamat endpoint dan API key, lalu klik Uji koneksi.' }
+      { target: function () { return byText('.card .field', 'Instruksi gaya tambahan'); }, title: 'Gaya sendiri', text: 'Pilih gaya bawaan, atau tulis bebas gaya bicara yang kamu mau.' }
     ] }
   ];
   function byId(id) { return TUTORIALS.filter(function (t) { return t.id === id; })[0]; }
