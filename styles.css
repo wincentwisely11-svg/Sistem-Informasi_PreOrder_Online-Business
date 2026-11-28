@@ -1144,7 +1144,7 @@ body:has(.scrim) { overflow: hidden; }
 /* ---------- pengaturan ---------- */
 .set-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
   align-items: start;
 }
@@ -1382,3 +1382,4 @@ body:has(.scrim) { overflow: hidden; }
 .prod { min-width: 0; }
 .prod-facts { flex-wrap: wrap; row-gap: 10px; }
 .prod-fact b { white-space: nowrap; }
+.set-grid > .col { gap: 14px; }

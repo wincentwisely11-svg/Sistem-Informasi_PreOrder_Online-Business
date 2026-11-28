@@ -37,6 +37,26 @@ PO.views.settings = (function () {
     };
   }
 
+  var rebalance = null;
+  function balance(grid, cards, colA, colB) {
+    if (!document.body.contains(grid)) return;
+    var twoCols = getComputedStyle(grid).gridTemplateColumns.split(' ').length > 1;
+    cards.forEach(function (c) { colA.appendChild(c); });          // satu kolom dulu agar tinggi tiap kartu terukur
+    if (!twoCols) return;
+    var gap = parseFloat(getComputedStyle(colA).rowGap) || 14, n = cards.length;
+    var hs = cards.map(function (c) { return c.offsetHeight + gap; });
+    var total = hs.reduce(function (x, y) { return x + y; }, 0), best = 1, bestDiff = Infinity;
+    for (var m = 1; m < (1 << n); m += 2) {                         // kartu pertama selalu di kolom kiri; coba semua pembagian
+      var sumA = 0;
+      for (var i = 0; i < n; i++) if (m & (1 << i)) sumA += hs[i];
+      var diff = Math.abs(total - 2 * sumA);
+      if (diff < bestDiff) { bestDiff = diff; best = m; }
+    }
+    cards.forEach(function (c, i) { (best & (1 << i) ? colA : colB).appendChild(c); });
+  }
+  var rzTimer = 0;
+  window.addEventListener('resize', function () { clearTimeout(rzTimer); rzTimer = setTimeout(function () { if (rebalance) rebalance(); }, 120); });
+
   function render() {
     var st = S.get(), set = st.settings, fields = {};
     var base = (D.PRESETS[st.presetId] || D.PRESETS.bakery).settings;
@@ -85,7 +105,7 @@ PO.views.settings = (function () {
     function paintFs() {
       U.clear(fsBox);
       fsBox.appendChild(h('div', null, h('div', { class: 'field-label' }, 'Ukuran tulisan'), h('div', { class: 'field-hint' }, 'Berlaku langsung dan tersimpan di perangkat ini.')));
-      fsBox.appendChild(UI.seg(UI.FONT_SCALES.map(function (f) { return { value: f[1], label: f[0] }; }), UI.getFontScale(), function (v) { UI.setFontScale(v); paintFs(); }));
+      fsBox.appendChild(UI.seg(UI.FONT_SCALES.map(function (f) { return { value: f[1], label: f[0] }; }), UI.getFontScale(), function (v) { UI.setFontScale(v); paintFs(); setTimeout(function () { if (rebalance) rebalance(); }, 0); }));
       fsBox.appendChild(sample);
     }
     paintFs();
@@ -133,9 +153,17 @@ PO.views.settings = (function () {
           });
         }))));
 
+    /* kartu disusun ke dua kolom sama lebar, lalu diseimbangkan tingginya supaya kolom kiri dan kanan berakhir sejajar */
+    var cards = [profile, rules, online, theme, PO.budi.settingsCard(), templates, data, account];
+    var colA = h('div', { class: 'col' }), colB = h('div', { class: 'col' });
+    var grid = h('div', { class: 'set-grid' }, colA, colB);
+    cards.forEach(function (c) { colA.appendChild(c); });
+    rebalance = function () { balance(grid, cards, colA, colB); };
+    requestAnimationFrame(rebalance);
+
     return h('div', null,
       UI.pageHead('Pengaturan', 'Sesuaikan Batchin dengan usaha pre-order kamu.', [UI.btn('Simpan', 'check', '', save)]),
-      h('div', { class: 'set-grid' }, h('div', { class: 'col' }, profile, rules, online), h('div', { class: 'col' }, theme, PO.budi.settingsCard(), templates, data, account)));
+      grid);
   }
 
   return { render: render };
