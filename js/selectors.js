@@ -8,13 +8,19 @@ PO.sel = (function () {
   function sameMonth(iso, d) { var x = new Date(iso); return x.getFullYear() === d.getFullYear() && x.getMonth() === d.getMonth(); }
   function doneDate(o) { return o.completedAt || o.createdAt; }
 
+  // Pesanan valid (tidak dibatalkan) pada bulan terkait
+  function validIn(d) {
+    return orders().filter(function (o) {
+      return o.status !== 'cancelled' && sameMonth(o.createdAt || doneDate(o), d);
+    });
+  }
   function completedIn(d) { return orders().filter(function (o) { return o.status === 'completed' && sameMonth(doneDate(o), d); }); }
-  function revenue(d) { return U.sum(completedIn(d), function (o) { return o.total; }); }
+  function revenue(d) { return U.sum(validIn(d), function (o) { return o.total; }); }
   function expensesIn(d) { return S.get().expenses.filter(function (e) { return sameMonth(e.date, d); }); }
   function expense(d) { return U.sum(expensesIn(d), function (e) { return e.amount; }); }
 
   function cogs(d) {
-    return U.sum(completedIn(d), function (o) {
+    return U.sum(validIn(d), function (o) {
       var p = S.productById(o.productId);
       return p ? p.hpp * o.qty : 0;
     });
@@ -51,7 +57,7 @@ PO.sel = (function () {
   }
 
   function receivable() {
-    return U.sum(orders().filter(function (o) { return o.status !== 'cancelled' && o.status !== 'completed'; }), function (o) { return o.total - o.paidAmount; });
+    return U.sum(orders().filter(function (o) { return o.status !== 'cancelled' && o.payment !== 'paid'; }), function (o) { return o.total - o.paidAmount; });
   }
 
   function repeatCustomers() {
@@ -64,7 +70,7 @@ PO.sel = (function () {
   function topProducts() {
     var map = {};
     orders().forEach(function (o) {
-      if (o.status !== 'completed') return;
+      if (o.status === 'cancelled') return;
       map[o.productId] = map[o.productId] || { qty: 0, revenue: 0 };
       map[o.productId].qty += o.qty;
       map[o.productId].revenue += o.total;

@@ -1,25 +1,181 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="medspa" style="--tp-h: 30">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pesan — Batchin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="styles.css">
+  <script src="js/auth.js"></script>
+  <script>
+    window.CURRENT_USER = PO_AUTH.guard();
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pesan — Licia's Bakehouse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="views.css">
+  <style>
+    /* Pengaman layout halaman pemesanan publik */
+    body {
+      margin: 0;
+      min-height: 100vh;
+    }
+    .pub {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+      position: relative;
+      z-index: 1;
+    }
+    .pub-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+    .pub-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--ink, #1f1726);
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 7px 14px;
+      border-radius: 999px;
+    }
+    .pub-back:hover {
+      background: #fff;
+    }
+    .pub-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .pub-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--brand, #b97d70);
+      color: #fff;
+      font-weight: 700;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .pub-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .pub-logo svg {
+      width: 26px;
+      height: 26px;
+    }
+    .pub-title {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+    .pub-banner {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.85);
+    }
+    .pub-banner.closed {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+    .pub-prods {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .pub-prod {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(0, 0, 0, 0.1);
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .pub-prod[aria-pressed="true"] {
+      border-color: var(--brand, #b97d70);
+      box-shadow: 0 0 0 3px rgba(185, 125, 112, 0.18);
+      background: #fffaf8;
+    }
+    .pub-prod-img {
+      width: 100%;
+      height: 100px;
+      border-radius: 10px;
+      background: #f5efe9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: var(--brand, #b97d70);
+    }
+    .pub-prod-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .pub-prod-img svg {
+      width: 32px;
+      height: 32px;
+    }
+    .pub-sum {
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .pub-note {
+      background: rgba(0, 0, 0, 0.03);
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+    .pub-steps {
+      margin: 8px 0 0 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-<div class="tp-screen" id="pub"></div>
-<div id="modal-root"></div>
-<div id="toast-root" class="toast-root" role="status" aria-live="polite"></div>
-<script src="js/util.js"></script>
-<script src="js/icons.js"></script>
-<script src="js/data.js"></script>
-<script src="js/estimate.js"></script>
-<script src="js/inbox.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/public.js"></script>
+  <div class="tp-screen" id="pub"></div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" role="status" aria-live="polite"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/estimate.js"></script>
+  <script src="js/inbox.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/public.js"></script>
 </body>
 </html>

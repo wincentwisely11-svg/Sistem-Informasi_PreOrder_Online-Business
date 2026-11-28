@@ -6,6 +6,9 @@ PO.store = (function () {
   var D = PO.data;
   var KEY = 'batchin.state.v1';
 
+  var SERVICE_FEE = 2500;
+  var TAX_RATE = 0.12;
+
   var state = null;
   var listeners = [];
   var memoryOnly = false;
@@ -116,12 +119,25 @@ PO.store = (function () {
     return 'BTH-' + U.pad(state.counters.batch, 3);
   }
 
+  function calcCharges(subtotal, includeServiceFee) {
+    var sub = Number(subtotal) || 0;
+    var fee = includeServiceFee === false ? 0 : SERVICE_FEE;
+    var tax = Math.round(sub * TAX_RATE);
+    return {
+      subtotal: sub,
+      serviceFee: fee,
+      tax: tax,
+      total: sub + fee + tax
+    };
+  }
+
   /* ---------- pesanan ---------- */
   function createOrder(input) {
     var product = productById(input.productId);
     if (!product) throw new Error('Produk tidak ditemukan.');
     var qty = Number(input.qty);
-    var total = qty * product.price;
+    var charges = calcCharges(qty * product.price, input.includeServiceFee !== false);
+    var total = charges.total;
     var now = new Date();
     var code = nextOrderCode();
     var est = PO.estimate(state, product.id, qty);
@@ -132,6 +148,9 @@ PO.store = (function () {
       productId: product.id,
       qty: qty,
       unitPrice: product.price,
+      subtotal: charges.subtotal,
+      serviceFee: charges.serviceFee,
+      tax: charges.tax,
       total: total,
       status: 'waiting',
       payment: input.payment || 'unpaid',
@@ -385,6 +404,9 @@ PO.store = (function () {
   }
 
   return {
+    SERVICE_FEE: SERVICE_FEE,
+    TAX_RATE: TAX_RATE,
+    calcCharges: calcCharges,
     load: load,
     get: getState,
     subscribe: subscribe,

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="medspa" style="--tp-h: 30">
+<head>
+  <script src="js/auth.js"></script>
+  <script>PO_AUTH.guard('admin');</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Batchin — Dashboard Admin (Licia's Bakehouse)</title>
+  <meta name="description" content="Sistem informasi pre-order generik: pesanan, antrean batch produksi, dan pembukuan untuk semua bisnis PO.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="budi.css">
+</head>
+<body>
+  <div class="tp-screen" id="app">
+    <div class="tp-fx" aria-hidden="true"></div>
+    <div id="boot" class="boot">Memuat sistem…</div>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" role="status" aria-live="polite"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/inbox.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/estimate.js"></script>
+  <script src="js/selectors.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/views/dashboard.js"></script>
+  <script src="js/views/orders.js"></script>
+  <script src="js/views/inbox.js"></script>
+  <script src="js/views/kanban.js"></script>
+  <script src="js/views/products.js"></script>
+  <script src="js/views/finance.js"></script>
+  <script src="js/views/reports.js"></script>
+  <script src="js/views/settings.js"></script>
+  <script src="js/budi.js"></script>
+  <script src="js/tutorial.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

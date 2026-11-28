@@ -1,41 +1,273 @@
-<!DOCTYPE html>
-<html lang="id" data-theme="medspa" style="--tp-h: 30">
+<!doctype html>
+<html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Batchin — Sistem Pre-Order & Batch Produksi</title>
-<meta name="description" content="Sistem informasi pre-order generik: pesanan, antrean batch produksi, dan pembukuan untuk semua bisnis PO.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="budi.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Masuk — The PreOrder</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="js/auth.js"></script>
+  <script>
+    // Jika sudah login, langsung arahkan ke halaman sesuai role
+    (function () {
+      const s = PO_AUTH.getSession();
+      if (s && s.role === 'admin') window.location.replace('admin.html');
+      if (s && s.role === 'customer') window.location.replace('Customer/customer.html');
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #FFFDF9;
+      --surface: #FFFFFF;
+      --ink: #1F1726;
+      --muted: #6B6275;
+      --line: #ECE4DF;
+      --accent: #6B21A8;
+      --accent-hover: #581C87;
+      --accent-soft: #F3E8FF;
+      --danger: #DC2626;
+      --danger-bg: #FEF2F2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: radial-gradient(circle at top right, #F5ECFF 0%, var(--bg) 55%);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 18px 40px -15px rgba(31, 23, 38, 0.08);
+    }
+    .brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .brand-badge {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+      letter-spacing: 0.03em;
+    }
+    .brand h1 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .brand p {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #F6F2F8;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 9px;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--accent);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+    .form-group input {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .btn-submit {
+      width: 100%;
+      margin-top: 6px;
+      padding: 12px;
+      border: none;
+      border-radius: 11px;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-submit:hover { background: var(--accent-hover); }
+    .alert {
+      display: none;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid #FECACA;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .alert.show { display: block; }
+    .hidden { display: none; }
+    .hint {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--line);
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body>
-<div class="tp-screen" id="app">
-  <div class="tp-fx" aria-hidden="true"></div>
-  <div id="boot" class="boot">Memuat sistem…</div>
-</div>
-<div id="modal-root"></div>
-<div id="toast-root" class="toast-root" role="status" aria-live="polite"></div>
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-badge">PRE-ORDER PORTAL</span>
+      <h1>The PreOrder</h1>
+      <p>Silakan masuk untuk memesan atau mengelola PO</p>
+    </div>
 
-<script src="js/util.js"></script>
-<script src="js/icons.js"></script>
-<script src="js/data.js"></script>
-<script src="js/store.js"></script>
-<script src="js/estimate.js"></script>
-<script src="js/selectors.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/views/dashboard.js"></script>
-<script src="js/views/orders.js"></script>
-<script src="js/views/kanban.js"></script>
-<script src="js/views/products.js"></script>
-<script src="js/views/finance.js"></script>
-<script src="js/views/reports.js"></script>
-<script src="js/views/settings.js"></script>
-<script src="js/budi.js"></script>
-<script src="js/tutorial.js"></script>
-<script src="js/app.js"></script>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tabLogin">Masuk (Login)</button>
+      <button type="button" class="tab-btn" id="tabSignup">Daftar Akun</button>
+    </div>
+
+    <div class="alert" id="authAlert"></div>
+
+    <!-- FORM LOGIN -->
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginId">Email atau Username</label>
+        <input type="text" id="loginId" placeholder="Contoh: nama@email.com" required />
+      </div>
+      <div class="form-group">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" placeholder="Masukkan password" required />
+      </div>
+      <button type="submit" class="btn-submit">Masuk Sekarang</button>
+    </form>
+
+    <!-- FORM SIGN UP (CUSTOMER) -->
+    <form id="signupForm" class="hidden">
+      <div class="form-group">
+        <label for="regName">Nama Lengkap</label>
+        <input type="text" id="regName" placeholder="Nama penerima pesanan" required />
+      </div>
+      <div class="form-group">
+        <label for="regEmail">Email</label>
+        <input type="email" id="regEmail" placeholder="nama@email.com" required />
+      </div>
+      <div class="form-group">
+        <label for="regPhone">No. WhatsApp (Opsional)</label>
+        <input type="tel" id="regPhone" placeholder="08xxxxxxxxxx" />
+      </div>
+      <div class="form-group">
+        <label for="regPass">Buat Password</label>
+        <input type="password" id="regPass" placeholder="Minimal 4 karakter" required />
+      </div>
+      <button type="submit" class="btn-submit">Daftar &amp; Lihat Katalog</button>
+    </form>
+
+    
+
+  <script>
+    const tabLogin = document.getElementById('tabLogin');
+    const tabSignup = document.getElementById('tabSignup');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const authAlert = document.getElementById('authAlert');
+
+    function showError(msg) {
+      authAlert.textContent = msg;
+      authAlert.classList.add('show');
+    }
+
+    function clearError() {
+      authAlert.textContent = '';
+      authAlert.classList.remove('show');
+    }
+
+    tabLogin.addEventListener('click', () => {
+      clearError();
+      tabLogin.classList.add('active');
+      tabSignup.classList.remove('active');
+      loginForm.classList.remove('hidden');
+      signupForm.classList.add('hidden');
+    });
+
+    tabSignup.addEventListener('click', () => {
+      clearError();
+      tabSignup.classList.add('active');
+      tabLogin.classList.remove('active');
+      signupForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    });
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clearError();
+      const res = PO_AUTH.login(
+        document.getElementById('loginId').value,
+        document.getElementById('loginPass').value
+      );
+      if (!res.ok) return showError(res.message);
+      window.location.href = res.redirect;
+    });
+
+    signupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clearError();
+      const res = PO_AUTH.signup({
+        name: document.getElementById('regName').value,
+        email: document.getElementById('regEmail').value,
+        phone: document.getElementById('regPhone').value,
+        password: document.getElementById('regPass').value
+      });
+      if (!res.ok) return showError(res.message);
+      window.location.href = res.redirect;
+    });
+  </script>
 </body>
 </html>

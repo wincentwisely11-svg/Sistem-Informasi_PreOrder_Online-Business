@@ -4,6 +4,7 @@ PO.app = (function () {
   var U = PO.util, S = PO.store, I = PO.icons, h = U.h;
   var ROUTES = [
     { key: 'dashboard', label: 'Ringkasan', title: 'Ringkasan', icon: 'dashboard' },
+    { key: 'inbox', label: 'Pesanan Masuk', title: 'Pesanan Masuk', icon: 'message' },
     { key: 'orders', label: 'Pesanan', title: 'Pesanan', icon: 'orders' },
     { key: 'kanban', label: 'Antrean', title: 'Antrean Produksi', icon: 'kanban' },
     { key: 'products', label: 'Produk', title: 'Produk', icon: 'box' },
@@ -30,10 +31,15 @@ PO.app = (function () {
   function buildSidebar() {
     var set = S.get().settings, current = route().key;
     var owner = set.ownerName || set.businessName;
+    var pending = (window.PO && PO.inbox && PO.inbox.pendingCount) ? PO.inbox.pendingCount() : 0;
+
     var node = h('aside', { class: 'sb', id: 'sidebar' },
       h('a', { class: 'sb-brand', href: '#dashboard' }, h('span', { class: 'nav-mark' }, U.initials(set.businessName).charAt(0)), h('span', null, U.truncate(set.businessName, 20))),
       h('nav', { class: 'sb-links', 'aria-label': 'Menu utama' }, ROUTES.map(function (r) {
-        return h('a', { class: 'sb-link', href: '#' + r.key, 'aria-current': r.key === current ? 'page' : null }, I.el(r.icon), h('span', null, r.label));
+        var badge = (r.key === 'inbox' && pending > 0)
+          ? h('span', { style: 'margin-left:auto;background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;' }, String(pending))
+          : null;
+        return h('a', { class: 'sb-link', href: '#' + r.key, 'aria-current': r.key === current ? 'page' : null }, I.el(r.icon), h('span', null, r.label), badge);
       })),
       h('div', { class: 'sb-foot' },
         h('div', { class: 'sb-avatar' }, set.photo ? h('img', { src: set.photo, alt: '' }) : U.initials(owner).charAt(0)),
@@ -51,7 +57,9 @@ PO.app = (function () {
     dateEl.textContent = U.weekdayShort(new Date()) + ', ' + U.dateID(new Date());
     var scroll = window.scrollY;
     U.clear(main);
-    main.appendChild(PO.views[r.key].render());
+    if (PO.views[r.key]) {
+      main.appendChild(PO.views[r.key].render());
+    }
     window.scrollTo(0, scroll);
   }
 
@@ -70,15 +78,18 @@ PO.app = (function () {
       h('header', { class: 'topbar' },
         h('button', { class: 'btn btn-quiet btn-icon menu-btn', type: 'button', 'aria-label': 'Buka menu', onClick: function () { setMenu(true); } }, I.el('menu')),
         titleEl, dateEl,
-        h('button', { class: 'help-btn', type: 'button', title: 'Bantuan & tutorial', 'aria-label': 'Bantuan & tutorial', onClick: function () { PO.tour.openMenu(); } }, I.el('help'))),
+        h('button', { class: 'help-btn', type: 'button', title: 'Bantuan & tutorial', 'aria-label': 'Bantuan & tutorial', onClick: function () { if (PO.tour && PO.tour.openMenu) PO.tour.openMenu(); } }, I.el('help'))),
       main));
     S.subscribe(render);
     window.addEventListener('hashchange', function () { setMenu(false); window.scrollTo(0, 0); render(); });
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'batchin.inbox.v1' || e.key === 'batchin.state.v1') render();
+    });
     render();
-    PO.tour.init();
-    PO.budi.init();
+    if (PO.tour && PO.tour.init) PO.tour.init();
+    if (PO.budi && PO.budi.init) PO.budi.init();
   }
 
   document.addEventListener('DOMContentLoaded', boot);
-  return { render: render };
+  return { render: render, refresh: render };
 })();

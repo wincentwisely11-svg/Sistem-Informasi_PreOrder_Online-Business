@@ -1,4 +1,4 @@
-/* views/settings.js — profil usaha, aturan PO, tampilan (warna), template data, dan data. */
+/* views/settings.js — profil usaha, aturan PO, tampilan (warna), template data, data, dan akun. */
 window.PO = window.PO || {};
 PO.views = PO.views || {};
 PO.views.settings = (function () {
@@ -80,7 +80,6 @@ PO.views.settings = (function () {
       text('leadDays', 'Lama pengerjaan (hari)', { num: true }), text('dpPercent', 'Persentase DP', { num: true, hint: 'Isi 0 jika tanpa DP.' }),
       text('monthlyTarget', 'Target pendapatan bulanan (Rp)', { num: true, span: true })));
 
-
     var fsBox = h('div', { class: 'col', style: 'gap:10px' });
     var sample = h('div', { class: 'font-sample' }, 'Contoh teks: pesanan ORD-001 siap dikirim hari ini. Total Rp 148.000.');
     function paintFs() {
@@ -117,9 +116,26 @@ PO.views.settings = (function () {
         UI.btn('Reset data contoh', 'refresh', 'btn-ghost', function () { UI.confirm({ title: 'Reset data contoh?', text: 'Semua perubahan diganti data contoh.', ok: 'Reset', danger: true, onOk: function () { S.resetDemo(); UI.toast('Data contoh dipulihkan'); } }); }),
         UI.btn('Kosongkan pesanan', 'trash', 'btn-danger', function () { UI.confirm({ title: 'Kosongkan semua pesanan?', text: 'Pesanan dan pengeluaran dihapus. Produk dan pengaturan tetap.', ok: 'Kosongkan', danger: true, onOk: function () { S.clearAll(); UI.toast('Data dikosongkan', 'warn'); } }); }))));
 
+    var session = (window.PO_AUTH && PO_AUTH.getSession()) || {};
+    var account = UI.card('Akun admin', h('div', { class: 'col' },
+      h('p', { class: 'small mute' }, 'Masuk sebagai ' + (session.name || set.ownerName || 'Ci Felicia') + (session.email ? ' (' + session.email + ')' : '') + '. Keluar untuk beralih ke halaman login atau akun pelanggan.'),
+      h('div', { class: 'row wrap' },
+        UI.btn('Keluar dari akun', null, 'btn-danger', function () {
+          UI.confirm({
+            title: 'Keluar dari dashboard admin?',
+            text: 'Kamu akan diarahkan kembali ke halaman masuk (login).',
+            ok: 'Keluar',
+            danger: true,
+            onOk: function () {
+              if (window.PO_AUTH) PO_AUTH.logout();
+              else window.location.href = 'index.html';
+            }
+          });
+        }))));
+
     return h('div', null,
       UI.pageHead('Pengaturan', 'Sesuaikan Batchin dengan usaha pre-order kamu.', [UI.btn('Simpan', 'check', '', save)]),
-      h('div', { class: 'set-grid' }, h('div', { class: 'col' }, profile, rules, online), h('div', { class: 'col' }, theme, PO.budi.settingsCard(), templates, data)));
+      h('div', { class: 'set-grid' }, h('div', { class: 'col' }, profile, rules, online), h('div', { class: 'col' }, theme, PO.budi.settingsCard(), templates, data, account)));
   }
 
   return { render: render };

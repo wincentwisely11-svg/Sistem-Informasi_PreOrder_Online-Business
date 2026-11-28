@@ -492,6 +492,7 @@ svg { display: block; flex: none; }
 .spacer { flex: 1; }
 .divider { height: 1px; background: var(--tp-line); border: 0; margin: 0; }
 .scroll-x { overflow-x: auto; }
+
 /* ---------- modal / bottom sheet ---------- */
 .modal-root { position: relative; z-index: 90; }
 .scrim {
@@ -520,7 +521,7 @@ svg { display: block; flex: none; }
   animation: tp-pop var(--tp-dur) var(--tp-ease) both;
   overflow: hidden;
 }
-.sheet.wide { width: min(760px, calc(100vw - 32px)); }
+.sheet.wide { width: min(580px, calc(100vw - 32px)); }
 
 .sheet-head {
   display: flex;
@@ -1056,13 +1057,21 @@ body:has(.scrim) { overflow: hidden; }
 
 .pay-box {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
   gap: 12px;
   padding: 12px 14px;
   border-radius: var(--tp-r);
   background: var(--tp-surf-2);
   border: var(--tp-bw) solid var(--tp-line);
+}
+.pay-box .row,
+.pay-box .row.wrap {
+  justify-content: flex-start;
+}
+.pay-box .input {
+  width: 100%;
 }
 
 /* ---------- keuangan ---------- */
